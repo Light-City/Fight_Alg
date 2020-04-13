@@ -361,5 +361,116 @@ public:
     }
 };
 ```
+## 3.[120. 三角形最小路径和](https://leetcode-cn.com/problems/triangle/)
 
- 
+### 3.1 题目
+
+给定一个三角形，找出自顶向下的最小路径和。每一步只能移动到下一行中相邻的结点上。
+
+例如，给定三角形：
+
+[
+     [2],
+    [3,4],
+   [6,5,7],
+  [4,1,8,3]
+]
+自顶向下的最小路径和为 11（即，2 + 3 + 5 + 1 = 11）。
+
+### 3.2 解法
+
+- 坑！！！
+相邻本题指的是当前列index及列index+1，而不包括列index-1。
+
+题目中说了，自顶向下，联想到递归与动态规划，先用递归吧，问啥子就写啥子呗。
+
+> 解法1：递归法
+
+```cpp
+int minimumTotal(vector<vector<int>>& triangle) {
+    int n = triangle.size();
+    if(n == 0) return 0;
+    int m = triangle[n-1].size();
+    return dfs(triangle,0,0);   
+}
+
+int dfs(const vector<vector<int>>& triangle, int row, int col) {
+
+    if(row == triangle.size()-1) return triangle[row][col];
+
+    int cur = triangle[row][col] + dfs(triangle,row+1,col);
+    int right = triangle[row][col] + dfs(triangle,row+1,col+1);
+    int res = min(cur,right);
+    return res;
+}
+```
+
+> 解法2： 加memo 记忆化搜索
+
+
+```cpp
+int minimumTotal(vector<vector<int>>& triangle) {
+    int n = triangle.size();
+    if(n == 0) return 0;
+    int m = triangle[n-1].size();
+
+    memo = vector<vector<int>>(n,vector<int>(m,-1));
+    return dfs(triangle,0,0);   
+}
+
+int dfs(const vector<vector<int>>& triangle, int row, int col) {
+
+    if(row == triangle.size()-1) return triangle[row][col];
+
+
+    if(memo[row][col] != -1) return memo[row][col];
+
+    int cur = triangle[row][col] + dfs(triangle,row+1,col);
+    int right = triangle[row][col] + dfs(triangle,row+1,col+1);
+
+    int res = min(cur,right);
+    memo[row][col] = res; 
+
+
+    return memo[row][col];
+}
+```
+
+> 解法3 自底向上，二维dp
+
+```cpp
+int minimumTotal(vector<vector<int>>& triangle) {
+    int n = triangle.size();
+    if(n == 0) return 0;
+    int m = triangle[n-1].size();
+    vector<vector<int>> dp(n+1,vector<int>(m+1,0));
+
+    for(int i=n-1;i>=0;i--) {
+        for(int j=0;j<triangle[i].size();j++) {
+            dp[i][j] = triangle[i][j] + min(dp[i+1][j],dp[i+1][j+1]);
+        }
+
+    }
+
+    return dp[0][0];   
+}
+```
+> 一维dp：只保存前一行的最小值
+
+```cpp
+int minimumTotal(vector<vector<int>>& triangle) {
+    int n = triangle.size();
+    if(n == 0) return 0;
+    int m = triangle[n-1].size();
+    vector<int> dp(m+1,0);
+
+    for(int i=n-1;i>=0;i--) {
+        for(int j=0;j<triangle[i].size();j++) {
+            dp[j] = triangle[i][j] + min(dp[j],dp[j+1]);
+        }
+
+    }
+
+    return dp[0];   
+}
+```
