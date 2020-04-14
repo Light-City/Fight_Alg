@@ -477,7 +477,7 @@ int minimumTotal(vector<vector<int>>& triangle) {
 }
 ```
 
-## 4.[152. 乘积最大子数组](https://leetcode-cn.com/problems/maximum-product-subarray/)
+## 4.[53. 最大子序和](https://leetcode-cn.com/problems/maximum-subarray/)
 
 > 暴力法
 
