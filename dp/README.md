@@ -361,6 +361,7 @@ public:
     }
 };
 ```
+
 ## 3.[120. 三角形最小路径和](https://leetcode-cn.com/problems/triangle/)
 
 ### 3.1 题目
@@ -375,12 +376,12 @@ public:
    [6,5,7],
   [4,1,8,3]
 ]
-自顶向下的最小路径和为 11（即，2 + 3 + 5 + 1 = 11）。
+自顶向下的最小路径和为 11（即，2 + 3 + 5 + 1 = 11）。
 
 ### 3.2 解法
 
 - 坑！！！
-相邻本题指的是当前列index及列index+1，而不包括列index-1。
+  相邻本题指的是当前列index及列index+1，而不包括列index-1。
 
 题目中说了，自顶向下，联想到递归与动态规划，先用递归吧，问啥子就写啥子呗。
 
@@ -455,6 +456,7 @@ int minimumTotal(vector<vector<int>>& triangle) {
     return dp[0][0];   
 }
 ```
+
 > 一维dp：只保存前一行的最小值
 
 ```cpp
@@ -472,5 +474,189 @@ int minimumTotal(vector<vector<int>>& triangle) {
     }
 
     return dp[0];   
+}
+```
+
+## 4.[152. 乘积最大子数组](https://leetcode-cn.com/problems/maximum-product-subarray/)
+
+> 暴力法
+
+```cpp
+// 暴力解法
+int maxSubArray1(vector<int> &nums)
+{
+    int n = nums.size();
+    if (n == 0)
+        return 0;
+
+    int res = nums[0];
+    for (int i = 0; i < n; i++)
+    {
+
+        int sum = 0;
+        for (int j = i; j < n; j++)
+        {
+            sum += nums[j];
+            res = max(res, sum);
+        }
+    }
+    return res;
+}
+```
+
+> 动态规划法
+
+- 状态
+  - dp[i]定义为数组nums中以num[i] 结尾的最大连续子串和
+- 状态转移方程
+  - dp[i] = max(dp[i-1]+nums[i],nums[i])
+- 状态压缩 -> 优化数组空间
+  - 每次状态的更新只依赖于前一个状态，见后一个方法
+- 选出结果
+  - 有的题目结果是 dp[i] 。
+  - 本题结果是 dp[0]...dp[i] 中最大值。
+
+
+```cpp
+// 动态规划法
+// 状态 ： dp[i]定义为数组nums中以num[i] 结尾的最大连续子串和
+// 状态转移方程 : dp[i] = max(dp[i-1]+nums[i],nums[i])
+int maxSubArray2(vector<int> &nums)
+{
+    int n = nums.size();
+    if (n == 0)
+        return 0;
+    vector<int> dp(n);
+    dp[0] = nums[0];
+    int res = dp[0];
+    for (int i = 1; i < n; i++)
+    {
+        dp[i] = max(dp[i - 1] + nums[i], nums[i]);
+        res = max(res, dp[i]);
+    }
+    return res;
+}
+```
+
+> 考虑到当前状态只依赖于前面一个状态，可以压缩为常数空间
+
+```cpp
+// 上述状态压缩
+int maxSubArray3(vector<int> &nums)
+{
+    int n = nums.size();
+    if (n == 0)
+        return 0;
+    int mx = nums[0];
+    int res = mx;
+    for (int i = 1; i < n; i++)
+    {
+        mx = max(mx + nums[i], nums[i]);
+        res = max(res, mx);
+    }
+    return res;
+}
+```
+
+> 贪心法
+
+每次当累计sum大于0，继续往后计算，否则取当前元素。
+
+```cpp
+// 贪心法
+int maxSubArray4(vector<int> &nums)
+{
+    int n = nums.size();
+    if (n == 0)
+        return 0;
+    int sum = 0;
+    int res = nums[0];
+    for (auto num : nums)
+    {
+        sum = sum > 0 ? sum + num : num;
+        res = max(res, sum);
+    }
+    return res;
+}
+// 参考题解 得出的类似归并的分治算法
+int maxSubArray5(vector<int> &nums)
+{
+    int n = nums.size();
+    if (n == 0)
+        return 0;
+    int res = nums[0];
+    res = divide_alg(nums, 0, n - 1);
+
+    return res;
+}
+```
+
+> 分治法
+
+数组 [-2,1,-3,4,-1,2,1,-5,4] ，一共有 9 个元素，我们 mid=(left + right) / 2 这个原则，得到中间元素的索引为 4 ，也就是 -1，拆分成三个组合：
+
+- [-2,1,-3,4,-1]以及它的子序列（在-1左边的并且包含它的为一组）
+- [2,1,-5,4]以及它的子序列（在-1右边不包含它的为一组）
+- 任何包含-1以及它右边元素2的序列为一组（换言之就是包含左边序列的最右边元素以及右边序列最左边元素的序列，比如 [4,-1,2,1]，这样就保证这个组合里面的任何序列都不会和上面两个重复）
+
+以上的三个组合内的序列没有任何的重复的部分，而且一起构成所有子序列的全集，计算出这个三个子集合的最大值，然后取其中的最大值，就是这个问题的答案了。
+
+然而前两个子组合可以用递归来解决，一个函数就搞定，第三个跨中心的组合应该怎么计算最大值呢？
+
+答案就是**先计算左边序列里面的包含最右边元素的子序列的最大值，也就是从左边序列的最右边元素向左一个一个累加起来，找出累加过程中每次累加的最大值，就是左边序列的最大值。 同理找出右边序列的最大值，就得到了右边子序列的最大值。左右两边的最大值相加，就是包含这两个元素的子序列的最大值。**
+
+在计算过程中，累加和比较的过程是关键操作，一个长度为 n 的数组在递归的每一层都会进行 n 次操作，分治法的递归层级在 logN 级别，所以整体的时间复杂度是 O(nlogn)，在时间效率上不如动态规划的 O(n)复杂度。
+
+连续子序列的最大和主要由这三部分子区间里元素的最大和得到：
+
+- 第 1 部分：子区间 [left, mid]；
+- 第 2 部分：子区间 [mid + 1, right]；
+- 第 3 部分：包含子区间[mid , mid + 1]的子区间，即 nums[mid] 与nums[mid + 1]一定会被选取。
+
+参考自：
+
+> https://leetcode-cn.com/problems/maximum-subarray/solution/zheng-li-yi-xia-kan-de-dong-de-da-an-by-lizhiqiang/
+
+实现如下：
+
+```cpp
+// 参考题解 得出的类似归并的分治算法
+int maxSubArray5(vector<int> &nums)
+{
+    int n = nums.size();
+    if (n == 0)
+        return 0;
+    int res = nums[0];
+    res = divide_alg(nums, 0, n - 1);
+
+    return res;
+}
+int divide_alg(const vector<int> &nums, int left, int right)
+{
+    // 只有一个元素
+    if (left == right)
+    {
+        return nums[left];
+    }
+    int mid = left + (right - left) / 2;
+    int left_sum = divide_alg(nums, left, mid);
+    int right_sum = divide_alg(nums, mid + 1, right);
+    int left_cross_sum = nums[mid];
+    int sum = 0;
+    for (int i = mid; i >= left; i--)
+    {
+        sum += nums[i];
+        left_cross_sum = max(left_cross_sum, sum);
+    }
+
+    int right_cross_sum = nums[mid + 1];
+    sum = 0;
+    for (int i = mid + 1; i <= right; i++)
+    {
+        sum += nums[i];
+        right_cross_sum = max(right_cross_sum, sum);
+    }
+    int res = max(max(left_sum, right_sum), left_cross_sum + right_cross_sum);
+    return res;
 }
 ```
