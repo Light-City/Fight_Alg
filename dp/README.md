@@ -660,3 +660,178 @@ int divide_alg(const vector<int> &nums, int left, int right)
     return res;
 }
 ```
+
+## 5.[152. 乘积最大子数组](https://leetcode-cn.com/problems/maximum-product-subarray/)
+
+本题同第4题思路基本一致，直接开始写思路了。
+
+> 阐述思路
+
+
+考虑如下情形：
+
+- nums[i]>0 此时最大乘积为之前的结果，记作dp_max[i-1]
+  - 若dp_max[i-1]>0: dp_max[i] = dp_max[i-1]*nums[i]
+  - 若dp_max[i-1]<=0: dp_max[i] = nums[i]
+- nums[i]<=0 那么此时最大乘积就是：dp_max[i] = 之前的最小值*nums[i] 或者 nums[i]
+  - 若dp_min[i-1]<=0: dp_max[i] = dp_min[i-1]*nums[i]
+  - 若dp_min[i-1]>0: dp_max[i] = nums[i]
+
+小结:
+
+- 一个dp解决不了问题，需要两个dp，既要维护最大值，也要维护最小值
+
+于是因此二维dp或者两个dp:
+
+- 状态
+  - dp[0][i] 存储以第 i 个数结尾的 乘积最小 的连续子序列值
+  - dp[1][i] 存储以第 i 个数结尾的 乘积最大 的连续子序列值
+- 状态转移方程
+  - dp[0][i] = max(dp[0][i-1]*nums[i],nums[i])
+  - dp[1][i] = min(dp[1][i-1]*nums[i],nums[i])
+
+> 二维动态规划
+
+```cpp
+int maxProduct(vector<int> &nums)
+{
+    int n = nums.size();
+    if (n == 0)
+        return 0;
+    // dp[0][i] 存储以第 i 个数结尾的 乘积最小 的连续子序列值
+    // dp[1][i] 存储以第 i 个数结尾的 乘积最大 的连续子序列值
+    vector<vector<int>> dp(2, vector<int>(n + 1, 1));
+    int res = nums[0];
+    for (int i = 1; i <= n; i++)
+    {
+        if (nums[i - 1] < 0)
+            swap(dp[0][i - 1], dp[1][i - 1]);
+        dp[0][i] = min(nums[i - 1], dp[0][i - 1] * nums[i - 1]);
+        dp[1][i] = max(nums[i - 1], dp[1][i - 1] * nums[i - 1]);
+        res = max(res, dp[1][i]);
+    }
+    return res;
+}
+```
+
+> 两个一维dp
+
+```cpp
+int maxProduct(vector<int> &nums)
+{
+    int n = nums.size();
+    if (n == 0)
+        return 0;
+    // dp_min[i] 存储以第 i 个数结尾的 乘积最小 的连续子序列值
+    vector<int> dp_min(n + 1, 1);
+    // dp_max[i] 存储以第 i 个数结尾的 乘积最大 的连续子序列值
+    vector<int> dp_max(n + 1, 1);
+    int res = nums[0];
+    for (int i = 1; i <= n; i++)
+    {
+        if (nums[i - 1] < 0)
+            swap(dp_min[i - 1], dp_max[i - 1]);
+        dp_min[i] = min(nums[i - 1], dp_min[i - 1] * nums[i - 1]);
+        dp_max[i] = max(nums[i - 1], dp_max[i - 1] * nums[i - 1]);
+        res = max(res, dp_max[i]);
+    }
+    return res;
+}
+```
+
+> 状态压缩方法1
+
+根据上述的阐述我们可以得出如下两种结果：
+
+- 状态压缩：每次只与前面一个状态有关
+- dp最大值与最小值，始终都是在`dpMax*nums[i]`,`*dpMin*nums[i]`,`nums[i]`三者中取最大与最小。
+
+```cpp
+int maxProduct(vector<int> &nums)
+{
+    int n = nums.size();
+    if (n == 0)
+        return 0;
+    int dpMax = nums[0];
+    int dpMin = nums[0];
+    int res = nums[0];
+    for (int i = 1; i < n; i++)
+    {
+        //更新 dpMin 的时候需要 dpMax 之前的信息，所以先保存起来
+        int preMax = dpMax;
+        dpMax = max(max(dpMin * nums[i],dpMax * nums[i]), nums[i]);
+        dpMin = min(min(dpMin * nums[i],preMax * nums[i]), nums[i]);
+        res = max(res, dpMax);
+    }
+    return res;
+}
+> 状态压缩方法二
+
+直接按照dp二维压缩
+​```cpp
+int maxProduct(vector<int> &nums)
+{
+    int n = nums.size();
+    if (n == 0)
+        return 0;
+    int res = nums[0];
+    int dp_min = 1;
+    int dp_max = 1;
+    for (int i = 1; i <= n; i++)
+    {
+        if (nums[i - 1] < 0)
+            swap(dp_min, dp_max);
+        dp_min = min(nums[i - 1], dp_min * nums[i - 1]);
+        dp_max = max(nums[i - 1], dp_max * nums[i - 1]);
+        res = max(res, dp_max);
+    }
+    return res;
+}
+```
+
+> 题解中的方案
+
+参考自：
+
+> https://leetcode-cn.com/problems/maximum-product-subarray/solution/xiang-xi-tong-su-de-si-lu-fen-xi-duo-jie-fa-by--36/
+
+偶数个负数,乘积最大为所有元素
+奇数个负数,乘积最大
+
+- 不包含第一个负数
+- 不包含第二个负数
+
+如果有 0 存在的话，会使得上边的代码到 0 的位置之后 max 就一直变成 0 了。
+
+- 只需要将tmp设置为1，重新往后计算即可。
+
+```cpp
+int maxProduct(vector<int> &nums)
+{
+    int n = nums.size();
+    if (n == 0)
+        return 0;
+    int ret = 1;
+    int res = nums[0];
+    for (int i = 0; i < nums.size(); i++)
+    {
+        ret *= nums[i];
+        res = max(res, ret);
+        if (nums[i] == 0)
+        {
+            ret = 1;
+        }
+    }
+    ret = 1;
+    for (int i = nums.size() - 1; i >= 0; i--)
+    {
+        ret *= nums[i];
+        res = max(res, ret);
+        if (nums[i] == 0)
+        {
+            ret = 1;
+        }
+    }
+    return res;
+}
+```
