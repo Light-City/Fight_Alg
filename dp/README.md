@@ -835,3 +835,214 @@ int maxProduct(vector<int> &nums)
     return res;
 }
 ```
+
+## 6.[887. 鸡蛋掉落](https://leetcode-cn.com/problems/super-egg-drop/)
+
+题目：
+你将获得 K 个鸡蛋，并可以使用一栋从 1 到 N  共有 N 层楼的建筑。
+
+每个蛋的功能都是一样的，如果一个蛋碎了，你就不能再把它掉下去。
+
+你知道存在楼层 F ，满足 0 <= F <= N 任何从高于 F 的楼层落下的鸡蛋都会碎，从 F 楼层或比它低的楼层落下的鸡蛋都不会破。
+
+每次移动，你可以取一个鸡蛋（如果你有完整的鸡蛋）并把它从任一楼层 X 扔下（满足 1 <= X <= N）。
+
+你的目标是确切地知道 F 的值是多少。
+
+无论 F 的初始值如何，你确定 F 的值的最小移动次数是多少？
+
+
+- 题目简化
+
+找摔不碎鸡蛋的最高楼层 F，「最坏情况」下「至少」要扔几次。
+
+例如：6层楼，1个鸡蛋，一层层试，最坏情况下到了第6层也不碎，也就是移动了6次。
+
+
+- 状态: 当前拥有的鸡蛋数 K 和需要测试的楼层数 N。随着测试的进行，鸡蛋个数可能减少，楼层的搜索范围会减小，这就是状态的变化。
+
+
+当我们选择在第 i 层楼扔了鸡蛋之后，可能出现两种情况：鸡蛋碎了，鸡蛋没碎。注意，这时候状态转移就来了：
+
+如果鸡蛋碎了，那么鸡蛋的个数 K 应该减一，搜索的楼层区间应该从 [1..N] 变为 [1..i-1] 共 i-1 层楼；
+
+如果鸡蛋没碎，那么鸡蛋的个数 K 不变，搜索的楼层区间应该从 [1..N] 变为 [i+1..N] 共 N-i 层楼。
+
+
+- 状态转移: 
+  - 如果鸡蛋碎了，那么鸡蛋的个数 K 应该减一，搜索的楼层区间应该从 [1..N] 变为 [1..i-1] 共 i-1 层楼；
+
+  - 如果鸡蛋没碎，那么鸡蛋的个数 K 不变，搜索的楼层区间应该从 [1..N] 变为 [i+1..N] 共 N-i 层楼。
+
+
+因此得出：dp[K][N] = 1 + min(dp[k][N-1],dp[K-1][N-i])
+
+
+实现如下：
+
+```cpp
+class Solution {
+private:
+    vector<vector<int>> memo;
+public:
+    int superEggDrop(int K, int N) {
+        memo = vector<vector<int>>(K+1,vector<int>(N+1,-1));
+        return dp(K,N);
+    }
+
+    int dp(int K, int N) {
+        if(K==1) return N;
+        if(N==0) return 0;
+
+        if(memo[K][N] != -1) return memo[K][N];
+        // 状态：当前拥有的鸡蛋数K和需要测试的楼层数N。
+        // 状态转移dp[K][i] = 1 + dp[K-1][i-1] + dp[K][N-i]
+        int res = INT_MAX;
+        for(int i=1;i<=N;i++) {
+            res = min(res,1+max(dp(K-1,i-1),dp(K,N-i)));
+        }
+        memo[K][N] = res;
+        return res;
+    }
+};
+```
+
+> 二分查找优化
+
+```cpp
+class Solution
+{
+private:
+    vector<vector<int>> memo;
+
+public:
+    int superEggDrop(int K, int N)
+    {
+        memo = vector<vector<int>>(K + 1, vector<int>(N + 1, -1));
+        return dp(K, N);
+    }
+
+    int dp(int K, int N)
+    {
+        if (K == 1)
+            return N;
+        if (N == 0)
+            return 0;
+
+        if (memo[K][N] != -1)
+            return memo[K][N];
+        // 状态：当前拥有的鸡蛋数K和需要测试的楼层数N。
+        // 状态转移dp[K][i] = 1 + dp[K-1][i-1] + dp[K][N-i]
+        int res = INT_MAX;
+
+        int l = 1, h = N;
+        while (l <= h)
+        {
+            int mid = l + (h - l) / 2;
+            // 碎
+            int b = dp(K - 1, mid - 1);
+            // 没碎
+            int no_b = dp(K, N - mid);
+            if (b > no_b)
+            {
+                h = mid - 1;
+                res = min(res, b + 1);
+            }
+            else
+            {
+                l = mid + 1;
+                res = min(res, no_b + 1);
+            }
+        }
+
+        memo[K][N] = res;
+        return res;
+    }
+};
+
+```
+
+> 自底向上
+
+```cpp
+class Solution {
+private:
+    vector<int> memo;
+public:
+    int superEggDrop(int K, int N) {
+        vector<vector<int> > dp(K + 1, vector<int>(N+1, 0));
+        // K个鸡蛋扔在第一层楼
+        for (int i = 1; i <= K; i++) dp[i][1] = 1;
+        // 1个鸡蛋测试N层楼
+        for (int j = 1; j <= N; j++) dp[1][j] = j;
+        
+        for (int i = 2; i <= K; i++) {
+            for (int j = 2; j <= N; j++) {
+                // i个鸡蛋 j层楼所需要移动的次数
+                // 首先第一个鸡蛋仍在t层楼 则 碎或者不碎 二分 max(f(K-1,t-1), f(K,N-t)) + 1
+                int res = INT_MAX;
+                
+                int l = 1, h = j;
+                while (l <= h)
+                {
+                    int mid = l + (h - l) / 2;
+                    // 碎
+                    int b = dp[i - 1][mid - 1];
+                    // 没碎
+                    int no_b = dp[i][j-mid];
+                    if (b > no_b)
+                    {
+                        h = mid - 1;
+                        res = min(res, b + 1);
+                    }
+                    else
+                    {
+                        l = mid + 1;
+                        res = min(res, no_b + 1);
+                    }
+                }
+                dp[i][j] = res;
+            }
+        }
+        return dp[K][N];
+    }
+};
+```
+
+
+
+
+> 重新定义状态转移
+
+- dp[k][n] 当前状态为 k 个鸡蛋，面对 n 层楼 返回这个状态下最少的扔鸡蛋次数
+  - 鸡蛋碎： 剩下j-1个鸡蛋,i-1次操作,dp[i-1][j-1]
+  - 鸡蛋不碎：剩下j个鸡蛋,i-1次操作,dp[i-1][j]
+
+
+实现：
+
+```cpp
+class Solution {
+private:
+   
+public:
+    int superEggDrop(int K, int N) {
+        vector<vector<int>> dp(K+1,vector<int>(N+1,0));
+
+        int m = 0;
+        // dp[k][n] 当前状态为 k 个鸡蛋，面对 n 层楼 返回这个状态下最少的扔鸡蛋次数
+
+        // 鸡蛋碎： 剩下j-1个鸡蛋,i-1次操作,dp[i-1][j-1]
+        // 鸡蛋不碎：剩下j个鸡蛋,i-1次操作,dp[i-1][j]
+
+        while(dp[K][m]<N) {
+            ++m;
+            for(int k=1;k<=K;k++) {
+                dp[k][m] = dp[k][m-1] + dp[k-1][m-1] + 1;
+            }
+        }
+        return m;
+    }
+};
+```
+
