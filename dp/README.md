@@ -1045,4 +1045,40 @@ public:
     }
 };
 ```
+## 7.[354. 俄罗斯套娃信封问题](https://leetcode-cn.com/problems/russian-doll-envelopes/)
 
+本题是一道典型的LIS，套路一毛一样，只需要先排序，后面完全按照第一题做法就行了。
+
+> 二维dp
+
+```cpp
+class Solution {
+public:
+    int maxEnvelopes(vector<vector<int>>& envelopes) {
+        int n = envelopes.size();
+        if(n<2) return n;
+        
+        sort(envelopes.begin(), envelopes.end(), cmp);
+        // [2,3] [5,4] [6,4] [6,7]
+        
+        vector<int> dp(n,1);
+        int max_sum = 1;
+        for(int i=1;i<n;i++) {
+            for(int j=i-1;j>=0;j--) {
+                if(envelopes[i][0] > envelopes[j][0] && envelopes[i][1] > envelopes[j][1]) {
+                    dp[i] = max(dp[i],dp[j]+1);
+                    max_sum = max(max_sum,dp[i]);
+                }
+            }
+        }
+        
+        return max_sum;
+        
+    }
+    
+    static bool cmp(const vector<int> &a, const vector<int> &b)
+    {
+        return a[0] < b[0];
+    }
+};
+```
