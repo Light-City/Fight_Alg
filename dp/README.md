@@ -64,6 +64,16 @@ public:
 };
 ```
 
+上述优化：
+```cpp
+for(int j = i - 1; j >= 0; j--) {
+    if(nums[i] > nums[j]) {
+        dp[i] = max(dp[i],dp[j]+1);
+    }
+}
+max_sum = max(max_sum, dp[i]);
+```
+
 （2）dp+二分查找法
 
 > 参考自解图
@@ -1067,9 +1077,9 @@ public:
             for(int j=i-1;j>=0;j--) {
                 if(envelopes[i][0] > envelopes[j][0] && envelopes[i][1] > envelopes[j][1]) {
                     dp[i] = max(dp[i],dp[j]+1);
-                    max_sum = max(max_sum,dp[i]);
                 }
             }
+            max_sum = max(max_sum,dp[i]);
         }
         
         return max_sum;
