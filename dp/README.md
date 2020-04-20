@@ -1092,3 +1092,95 @@ public:
     }
 };
 ```
+---
+## 树形DP
+
+## 8.[198. 打家劫舍](https://leetcode-cn.com/problems/house-robber/)
+
+### 8.1 记忆化搜索
+
+每次有两种选择，选与不选。
+
+```cpp
+class Solution {
+private:
+    vector<int> memo;
+public:
+    int rob(vector<int>& nums) {
+        int n = nums.size();
+        memo = vector<int>(n,-1);
+        return dfs(nums,n-1);
+    }
+
+
+    int dfs(const vector<int>& nums,int index) {
+        if(index<0) return 0;
+
+        if(memo[index]!=-1) {
+            return memo[index];
+        }
+
+        int res = 0;
+        
+        // 选择与不选择
+        res = max(nums[index]+dfs(nums,index-2),dfs(nums,index-1));
+    
+        memo[index] = res;
+        return res;
+    }
+};
+```
+当然去掉记忆化搜索就是动态规划。
+
+### 8.2 动态规划
+- 状态
+    - dp[i] 保存每次偷盗第i个房子时，所偷的最多金额
+- 状态转移方程
+    - dp[i] = max(dp[i-1],nums[i]+dp[i-2]);
+    
+```cpp
+class Solution {
+
+public:
+    int rob(vector<int>& nums) {
+        int n = nums.size();
+
+        if(n==0) return 0;
+        if(n==1) return nums[0];        
+        vector<int> dp(n,0);
+
+        dp[0] = nums[0];
+        dp[1] = max(nums[0],nums[1]);
+        for(int i=2;i<n;i++) {
+            dp[i] = max(dp[i-1],nums[i]+dp[i-2]);
+        }
+        
+        return dp[n-1];
+    }
+};
+```
+
+### 8.3 滚动数组
+
+```cpp
+class Solution {
+
+public:
+    int rob(vector<int>& nums) {
+        int n = nums.size();
+
+        if(n==0) return 0;
+        if(n==1) return nums[0];        
+
+        vector<int> dp(3,0);
+        dp[0] = nums[0];
+        dp[1] = max(nums[0],nums[1]);
+
+        for(int i=2;i<n;i++) {
+            dp[i%3] = max(dp[(i-1)%3],nums[i]+dp[(i-2)%3]);
+        }
+        
+        return max(max(dp[0],dp[1]),dp[2]);
+    }
+};
+```
