@@ -1359,3 +1359,110 @@ public:
     }
 };
 ```
+## 10.
+
+### 10.1 记忆化搜索
+
+每次抢劫，分为两种情况：
+- 选择
+    - 当前孩子及抢两个孩子的孩子们
+- 不选择
+    - 抢两个孩子之和
+状态转移：dp[root] = max(当前孩子及两个孩子的孩子们，两个孩子之和);
+
+```cpp
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+
+private:
+
+    unordered_map<TreeNode*,int> memo;
+public:
+    int rob(TreeNode* root) {
+        return dfs(root);
+    }
+
+
+    int dfs(TreeNode* root) {
+
+        if(!root) {
+            return 0;
+        }
+        if(memo.count(root))
+            return memo[root];
+ 
+        // 选择当前节点 -> 偷左右子节点的左右子节点
+        int res1 = root->val;
+        
+        if(root->left) {
+            res1 += (dfs(root->left->left)+dfs(root->left->right));
+        }
+        if(root->right) {
+            res1 += (dfs(root->right->left)+dfs(root->right->right));
+        }
+
+        // 不选择
+        int res2 = dfs(root->left) + dfs(root->right);
+        
+        memo[root]=max(res1,res2);
+        return memo[root];
+    }
+};
+```
+
+### 10.2 动态规划
+
+上述思想简化:
+每次都分为两种，抢与不抢，或者说选择与不选择。
+那么我们可以用两个状态来记录当前抢了还是没抢。
+
+```cpp
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+
+
+class Solution {
+private:
+    struct Rob {
+        int rob;
+        int no_rob;
+    };
+public:
+    int rob(TreeNode* root) {
+        Rob r = dp(root);
+        return max(r.rob,r.no_rob);
+    }
+
+
+    Rob dp(TreeNode* root) {
+        Rob r;
+        if(!root) return r;
+        Rob rl = dp(root->left);
+        Rob rr = dp(root->right); 
+        // 抢 当前抢，孩子肯定不抢
+        int r_rob = root->val + rl.no_rob + rr.no_rob;
+
+        // 不抢 当前不抢，孩子可抢，可不抢，取决于收益大小。 取两个孩子抢与不抢最大值之和
+        int not_r_rob = max(rl.no_rob,rl.rob) + max(rr.no_rob,rr.rob);
+
+        r.rob = r_rob;
+        r.no_rob = not_r_rob;
+        return r;
+    }
+};
+```
