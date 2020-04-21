@@ -1210,3 +1210,52 @@ public:
     }
 };
 ```
+## 9.
+
+
+### 9.1 记忆化搜索
+
+```cpp
+class Solution {
+private:
+    vector<int> memo;
+public:
+    int rob(vector<int>& nums) {
+        int n = nums.size();
+        memo = vector<int>(n,-1);
+        
+        if(n==0) return 0;
+        if(n==1) return nums[0];
+        if(n==2) return max(nums[0],nums[1]);
+
+        int b = nums.back();
+        nums.pop_back();
+        int r_1 = dfs(nums,n-2);
+
+        memo = vector<int>(n,-1);
+        nums.push_back(b);
+        nums.erase(nums.begin());
+        int r_2 = dfs(nums,n-2);
+        
+
+        return max(r_1,r_2);
+    }
+
+
+     int dfs(const vector<int>& nums,int index) {
+        if(index<0) return 0;
+
+        if(memo[index]!=-1) {
+            return memo[index];
+        }
+
+        int res = 0;
+        
+        // 选择与不选择
+        res = max(nums[index]+dfs(nums,index-2),dfs(nums,index-1));
+    
+        memo[index] = res;
+        return res;
+    }
+};
+```
