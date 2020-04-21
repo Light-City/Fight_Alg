@@ -1210,8 +1210,7 @@ public:
     }
 };
 ```
-## 9.
-
+## 9.[213. 打家劫舍 II](https://leetcode-cn.com/problems/house-robber-ii/)
 
 ### 9.1 记忆化搜索
 
@@ -1329,6 +1328,34 @@ public:
         }
 
         return max(dp1[n-2],dp2[n-1]);
+    }
+};
+```
+### 9.3 状态压缩
+
+```cpp
+class Solution {
+public:
+    int rob(vector<int>& nums) {
+        int n = nums.size();
+        if(n==0) return 0;
+        if (n == 1) return nums[0];
+        return max(__rob(nums,0,n-2),__rob(nums,1,n-1));
+    }
+
+
+     int __rob(const vector<int>& nums,int start, int end) {
+        
+        int pre = 0;
+        int pre_pre = 0;
+        int res;
+        for(int i=start;i<=end;i++) {
+            res = max(pre,nums[i]+pre_pre);
+            pre_pre = pre;
+            pre = res;
+        }
+
+        return res;
     }
 };
 ```
