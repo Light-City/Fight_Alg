@@ -1093,7 +1093,7 @@ public:
 };
 ```
 ---
-## 树形DP
+## 打家劫舍系列
 
 ## 8.[198. 打家劫舍](https://leetcode-cn.com/problems/house-robber/)
 
@@ -1467,3 +1467,79 @@ public:
     }
 };
 ```
+---
+## 买卖股票系列
+
+## 10.[121. 买卖股票的最佳时机](https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock/)
+
+> 一块块计算，分块求最大
+
+```cpp
+// 一块块计算，分块求最大
+int maxProfit(vector<int> &prices)
+{
+    int n = prices.size();
+    if (n < 2)
+        return 0;
+    int res = 0;
+    int min_val = prices[0];
+
+    for (int i = 1; i < n; i++)
+    {
+        res = max(res, prices[i] - min_val);
+        min_val = min(min_val, prices[i]);
+    }
+    return res;
+}
+```
+> 动态规划
+
+```cpp
+// 要注意：一开始不持股与卖出后不持股的区别。因为涉及到买卖次数的问题。
+// dp[i][0] 表示第i天未持有股票所获得的最大利润
+// 状态转移： 第一种是第i天保留之前状态，另一种是卖股票(那就是之前的买入状态转移到现在状态)
+// dp[i][1] 表示第i天持有股票所获得的最大利润
+// 状态转移： 第一种是之前仍旧持有状态保留、第二种是之前卖出到买入的转移 而k=1的情况下 前一次卖出一定为0
+// -prices[i]：注意：状态 1 不能由状态 0 来，因为事实上，状态 0 特指：“卖出股票以后不持有股票的状态”，请注意这个状态和“没有进行过任何一次交易的不持有股票的状态”的区别。
+// 因此，-prices[i] 就表示，在索引为 i 的这一天，执行买入操作得到的收益。注意：因为题目只允许一次交易，因此不能加上 dp[i - 1][0]。
+int maxProfit(vector<int> &prices)
+{
+    int n = prices.size();
+    vector<vector<int>> dp(n + 1, vector<int>(2, 0));
+    if (n == 0)
+        return 0;
+    dp[0][0] = 0;
+    dp[0][1] = -prices[0];
+    for (int i = 1; i < n; i++)
+    {
+        // 不持股票
+        dp[i][0] = max(dp[i - 1][0], dp[i - 1][1] + prices[i]);
+        // 持有股票
+        dp[i][1] = max(dp[i - 1][1], -prices[i]);
+    }
+    return dp[n - 1][0];
+}
+```
+> 状态压缩
+
+```cpp
+int maxProfit(vector<int> &prices)
+{
+
+    int n = prices.size();
+    if (n == 0)
+        return 0;
+    int profit_0 = 0;
+    int profit_1 = -prices[0];
+    for (int i = 1; i < n; i++)
+    {
+        // 不持股票
+        profit_0 = max(profit_0, profit_1 + prices[i]);
+        // 持有股票
+        profit_1 = max(profit_1, -prices[i]);
+    }
+    return profit_0;
+}
+
+```
+
