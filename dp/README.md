@@ -1543,3 +1543,113 @@ int maxProfit(vector<int> &prices)
 
 ```
 
+## 10.1 [122. 买卖股票的最佳时机 II](https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock-ii/)
+
+
+> 记忆化搜索
+
+```cpp
+// 记忆化搜索
+private:
+vector<vector<int>> memo;
+
+public:
+int maxProfit3(vector<int> &prices)
+{
+    int n = prices.size();
+    memo = vector<vector<int>>(n, vector<int>(2, -1));
+
+    // true表示持有股票
+    // false表示未持有股票
+    return dfs(prices, 0, 0);
+}
+int dfs(const vector<int> &prices, int index, int has_stock)
+{
+    if (index == prices.size())
+        return 0;
+
+    if (memo[index][has_stock] != -1)
+        return memo[index][has_stock];
+
+    int res = 0;
+    if (has_stock)
+    {
+        // 选择卖
+        res = dfs(prices, index + 1, false) + prices[index];
+    }
+    else
+    {
+        // 选择买
+        res = dfs(prices, index + 1, true) - prices[index];
+    }
+    // 不操作
+    int cur_retain = dfs(prices, index + 1, has_stock);
+    memo[index][has_stock] = max(res, cur_retain);
+    return memo[index][has_stock];
+}
+```
+> 动态规划
+
+```cpp
+int maxProfit(vector<int> &prices)
+{
+    int n = prices.size();
+    vector<vector<int>> dp(n, vector<int>(2));
+
+    if (n == 0)
+        return 0;
+
+    dp[0][0] = 0;
+    dp[0][1] = -prices[0];
+    for (int i = 1; i < n; i++)
+    {
+        dp[i][0] = max(dp[i - 1][0], dp[i - 1][1] + prices[i]); // 未持有
+        dp[i][1] = max(dp[i - 1][1], dp[i - 1][0] - prices[i]); // 持有
+    }
+    return dp[n - 1][0];
+}
+```
+> 状态压缩
+
+```cpp
+int maxProfit1(vector<int> &prices)
+{
+    int n = prices.size();
+
+    if (n == 0)
+        return 0;
+    int profit_0 = 0;
+    int profit_1 = -prices[0];
+    for (int i = 1; i < n; i++)
+    {
+        profit_0 = max(profit_0, profit_1 + prices[i]); // 未持有
+        profit_1 = max(profit_1, profit_0 - prices[i]); // 持有
+    }
+    return profit_0;
+}
+```
+
+> 贪心算法
+
+```cpp
+// 贪心算法 每一步都记录了当前最优选择  
+// 贪心算法和动态规划相比，它既不看前面（也就是说它不需要从前面的状态转移过来），也不看后面（无后效性，后面的选择不会对前面的选择有影响），
+// 因此贪心算法时间复杂度一般是线性的，空间复杂度是常数级别的。
+// 在众多策略中选择一个最优的，如本题：每次会有三种情况：0,负数，正数
+// 所以求最大利润，肯定选择正数即可
+int maxProfit2(vector<int> &prices)
+{
+    int n = prices.size();
+
+    int res = 0;
+    for (int i = 1; i < n; i++)
+    {
+        int sub_res = prices[i] - prices[i - 1];
+        // 只在底谷买入的时候才计算
+        if (sub_res > 0)
+            res += sub_res;
+    }
+    return res;
+}
+```
+
