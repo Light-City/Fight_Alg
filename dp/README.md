@@ -1756,4 +1756,39 @@ int maxProfit(vector<int> &prices)
     return dp_i20;
 }
 ```
+## 14.[188. 买卖股票的最佳时机 IV](https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock-iv/)
+
+我们知道，买卖一次要两天，所以在给定的n个股票中，最多允许买卖n/2，如果给定的k超过n/2，那就是不限制买卖股票次数了，这样就可以回到第122题进行求解，否则套用13题的解法进行求解。
+
+```cpp
+class Solution {
+public:
+    int maxProfit(int k, vector<int>& prices) {
+        int n = prices.size();
+        if(n==0) return 0;
+        int res=0;
+        if(k > n/2) {
+            int dp_0=0,dp_1=-prices[0];
+            for(int i=1;i<n;i++) {
+                dp_0 = max(dp_0,dp_1+prices[i]);
+                dp_1 = max(dp_1,dp_0-prices[i]);
+            }
+            return dp_0;
+        }
+        vector<vector<vector<int>>> dp(n,vector<vector<int>>(k+1,vector<int>(2)));
+        for(int i=0;i<n;i++) {
+            for(int j=1;j<=k;j++) {
+                if(i==0) {
+                    dp[i][j][0] = 0;
+                    dp[i][j][1] = -prices[0];
+                    continue;
+                }
+                dp[i][j][0] = max(dp[i-1][j][0],dp[i-1][j][1]+prices[i]);
+                dp[i][j][1] = max(dp[i-1][j][1],dp[i-1][j-1][0]-prices[i]);
+            }
+        }
+        return dp[n-1][k][0];
+    }
+};
+```
 
