@@ -1470,7 +1470,7 @@ public:
 ---
 ## 买卖股票系列
 
-## 10.[121. 买卖股票的最佳时机](https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock/)
+## 11.[121. 买卖股票的最佳时机](https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock/)
 
 > 一块块计算，分块求最大
 
@@ -1543,7 +1543,7 @@ int maxProfit(vector<int> &prices)
 
 ```
 
-## 10.1 [122. 买卖股票的最佳时机 II](https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock-ii/)
+## 12 [122. 买卖股票的最佳时机 II](https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock-ii/)
 
 
 > 记忆化搜索
@@ -1575,12 +1575,12 @@ int dfs(const vector<int> &prices, int index, int has_stock)
     if (has_stock)
     {
         // 选择卖
-        res = dfs(prices, index + 1, false) + prices[index];
+        res = dfs(prices, index + 1, 0) + prices[index];
     }
     else
     {
         // 选择买
-        res = dfs(prices, index + 1, true) - prices[index];
+        res = dfs(prices, index + 1, 1) - prices[index];
     }
     // 不操作
     int cur_retain = dfs(prices, index + 1, has_stock);
@@ -1650,6 +1650,110 @@ int maxProfit2(vector<int> &prices)
             res += sub_res;
     }
     return res;
+}
+```
+
+## 13.[123. 买卖股票的最佳时机 III](https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock-iii/)
+
+> 记忆化搜索
+
+```cpp
+class Solution {
+    // 记忆化搜索
+private:
+    vector<vector<vector<int>>> memo;
+
+public:
+    int maxProfit(vector<int> &prices)
+    {
+        int n = prices.size();
+        // 因为股票买卖也可以进行0次，所以有0,1,2三种
+        memo = vector<vector<vector<int>>>(n, vector<vector<int>>(3, vector<int>(2, -1)));
+        return dfs(prices, 0, 0, 0);
+    }
+    int dfs(const vector<int> &prices, int index, int has_stock, int counts)
+    {
+        // 未持有股票且买卖超过2次，结束
+        if (index == prices.size() || (counts == 2 && has_stock == 0))
+        {
+            return 0;
+        }
+
+        if (memo[index][counts][has_stock] != -1)
+            return memo[index][counts][has_stock];
+
+        int res = 0;
+        if (has_stock)
+        {
+            // 选择卖
+            res = dfs(prices, index + 1, 0, counts) + prices[index];
+        }
+        else
+        {
+            // 选择买
+            res = dfs(prices, index + 1, 1, counts + 1) - prices[index];
+        }
+        // 不操作
+        int cur_retain = dfs(prices, index + 1, has_stock, counts);
+        memo[index][counts][has_stock] = max(res, cur_retain);
+        return memo[index][counts][has_stock];
+    }
+};
+```
+> 动态规划法
+
+```
+int maxProfit(vector<int> &prices)
+{
+    int n = prices.size();
+    if (n == 0)
+        return 0;
+    vector<vector<vector<int>>> dp(n, vector<vector<int>>(3, vector<int>(2)));
+
+    // dp[i][k][0] 表示第i个股票时候未持有股票所获得的最大利润
+    // dp[i][k][1] 表示第i个股票时候持有股票所获得的最大利润
+
+    for (int i = 0; i < n; i++)
+    {
+        for (int k = 1; k <= 2; k++)
+        {
+            if(i==0) {
+                dp[i][k][0] = 0;
+                dp[i][k][1] = -prices[i];
+                continue;
+            }
+            dp[i][k][0] = max(dp[i - 1][k][0], dp[i - 1][k][1] + prices[i]);
+            // 当前持有股票 {原先持有，买入新股票}
+            dp[i][k][1] = max(dp[i - 1][k][1], dp[i - 1][k-1][0] - prices[i]);
+        }
+    }
+    return dp[n - 1][2][0];
+}
+```
+
+> 状态压缩
+
+```cpp
+int maxProfit(vector<int> &prices)
+{
+    int n = prices.size();
+    if (n == 0)
+        return 0;
+
+
+    // dp_i10 第一次未持有股票可获得的最大利润
+    // dp_i11 第一次持有股票可获得的最大利润
+    // dp_i20 第二次未持有股票可获得的最大利润
+    // dp_i21 第二次持有股票可获得的最大利润
+    int dp_i10 = 0,dp_i11=INT_MIN;
+    int dp_i20 = 0, dp_i21=INT_MIN;
+    for(auto elem : prices) {
+        dp_i10 = max(dp_i10,dp_i11+elem); 
+        dp_i11 = max(dp_i11,-elem); 
+        dp_i20 = max(dp_i20,dp_i21+elem); 
+        dp_i21 = max(dp_i21,dp_i10-elem); 
+    }
+    return dp_i20;
 }
 ```
 
