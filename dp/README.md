@@ -1559,8 +1559,8 @@ int maxProfit3(vector<int> &prices)
     int n = prices.size();
     memo = vector<vector<int>>(n, vector<int>(2, -1));
 
-    // true表示持有股票
-    // false表示未持有股票
+    // 1表示持有股票
+    // 0表示未持有股票
     return dfs(prices, 0, 0);
 }
 int dfs(const vector<int> &prices, int index, int has_stock)
@@ -1588,6 +1588,50 @@ int dfs(const vector<int> &prices, int index, int has_stock)
     return memo[index][has_stock];
 }
 ```
+
+> 另外一种记忆化搜索
+
+此方式调用：
+```cpp
+return dfs(prices, n-1, 0);
+```
+
+实现：
+```cpp
+int dfs(const vector<int> &prices, int index, int has_stock)
+{
+    if (index == 0)
+    {
+        // 一开始持有股票
+        if (has_stock)
+        {
+            return -prices[0];
+        }
+        // 一开始未持有股票
+        return 0;
+    }
+
+    if (memo[index][has_stock] != -1)
+        return memo[index][has_stock];
+
+    int res = 0;
+    if (has_stock)
+    {
+        // 前面买入 现在才有股票
+        res = dfs(prices, index - 1, 0) - prices[index];
+    }
+    else
+    {
+        // 前面卖出 现在没有股票
+        res = dfs(prices, index - 1, 1) + prices[index];
+    }
+    // 不操作
+    int cur_retain = dfs(prices, index - 1, has_stock);
+    memo[index][has_stock] = max(res, cur_retain);
+    return memo[index][has_stock];
+}
+```
+
 > 动态规划
 
 ```cpp
@@ -1863,6 +1907,95 @@ public:
             dp_i2 = tmp;
         }
         return dp_i0;
+    }
+};
+```
+## 16.[714. 买卖股票的最佳时机含手续费](https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock-with-transaction-fee/)
+
+> 记忆化搜索
+
+此方式调用：
+```cpp
+return dfs1(prices, fee, n-1, 0);
+```
+具体实现：
+```cpp
+int dfs(const vector<int> &prices, int fee, int index, int has_stock)
+{
+    if (index == 0) {
+        // 一开始持有股票
+        if(has_stock) {
+            return -prices[0];
+        }
+        // 一开始未持有股票
+        return 0;
+    }
+
+    if (memo[index][has_stock] != -1)
+        return memo[index][has_stock];
+
+    int res = 0;
+    if (has_stock)
+    {
+        // 前面买入 现在才有股票
+        res = dfs(prices, fee, index - 1, 0) - prices[index];
+    }
+    else
+    {
+        // 前面卖出 现在没有股票
+        res = dfs(prices, fee, index - 1, 1) + prices[index] - fee;
+    }
+    // 不操作
+    int cur_retain = dfs(prices, fee, index - 1, has_stock);
+    memo[index][has_stock] = max(res, cur_retain);
+    return memo[index][has_stock];
+}
+```
+
+> 动态规划
+
+```cpp
+class Solution
+{
+public:
+    int maxProfit(vector<int> &prices, int fee)
+    {
+        int n = prices.size();
+        if (n == 0)
+            return 0;
+
+        vector<vector<int>> dp(n, vector<int>(2));
+        dp[0][0] = 0;
+        dp[0][1] = -prices[0];
+        for (int i = 1; i < n; i++)
+        {
+            // 可以在这里减去 相当于卖出钱少了
+            dp[i][0] = max(dp[i - 1][0], dp[i - 1][1] + prices[i] - fee);
+            // 也可以在这里减去 相当于买入需要花更多钱
+            dp[i][1] = max(dp[i - 1][1], dp[i - 1][0] - prices[i]);
+        }
+        return dp[n - 1][0];
+    }
+```
+
+> 状态压缩
+
+```cpp
+    // 状态压缩
+    int maxProfit(vector<int> &prices, int fee)
+    {
+        int n = prices.size();
+        if (n == 0)
+            return 0;
+
+        int dp_0 = 0;
+        int dp_1 = -prices[0];
+        for (int i = 0; i < n; i++)
+        {
+            dp_0 = max(dp_0, dp_1 + prices[i] - fee);
+            dp_1 = max(dp_1, dp_0 - prices[i]);
+        }
+        return dp_0;
     }
 };
 ```
