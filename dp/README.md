@@ -1791,4 +1791,78 @@ public:
     }
 };
 ```
+## 15.[309. 最佳买卖股票时机含冷冻期](https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock-with-cooldown/)
 
+> 动态规划
+
+```cpp
+class Solution {
+public:
+    // 动态规划
+    // dp[i][0] = max(dp[i-1][0],dp[i-1][1]+prices[i])
+    // dp[i][1] = max(dp[i-1][1],dp[i-1][2]-prices[i])
+    // dp[i][2] = dp[i-1][0]
+    int maxProfit(vector<int>& prices) {
+        int n = prices.size();
+
+        if(n==0) return 0; 
+
+        vector<vector<int>> dp(n,vector<int>(3));
+        dp[0][0] = 0;
+        dp[0][2] = 0;
+        dp[0][1] = -prices[0];
+        for(int i=1;i<n;i++) {
+            dp[i][0] = max(dp[i-1][0],dp[i-1][1]+prices[i]);
+            dp[i][2] = dp[i-1][0];
+            dp[i][1] = max(dp[i-1][1],dp[i-1][2]-prices[i]);
+        }
+        return dp[n-1][0];
+    }
+```
+> 上述动态规划精简
+```cpp
+    // 上述动态规划精简
+    // dp[i][0] = max(dp[i-1][0],dp[i-1][1]+prices[i])
+    // dp[i][1] = max(dp[i-1][1],dp[i-2][0]-prices[i])
+    int maxProfit(vector<int>& prices) {
+        int n = prices.size();
+
+        if(n==0) return 0; 
+
+        vector<vector<int>> dp(n,vector<int>(3));
+        dp[0][0] = 0;
+        dp[0][1] = -prices[0];
+        // 冷冻期设置
+        int cold = 1;
+        for(int i=1;i<n;i++) {
+            dp[i][0] = max(dp[i-1][0],dp[i-1][1]+prices[i]);
+            if(i-1<cold) {
+                dp[i][1] = max(dp[i-1][1],dp[i-1][0]-prices[i]);
+            } else {
+                dp[i][1] = max(dp[i-1][1],dp[i-cold-1][0]-prices[i]);
+            }
+        }
+        return dp[n-1][0];
+    }
+```
+> 状态压缩
+```cpp
+    // 状态压缩
+    int maxProfit(vector<int>& prices) {
+        int n = prices.size();
+
+        if(n==0) return 0; 
+
+        int dp_i0=0;
+        int dp_i1=-prices[0];
+        int dp_i2=0;
+        for(int i=0;i<n;i++) {
+            int tmp = dp_i0;
+            dp_i0 = max(dp_i0,dp_i1+prices[i]);
+            dp_i1 = max(dp_i1,dp_i2-prices[i]);
+            dp_i2 = tmp;
+        }
+        return dp_i0;
+    }
+};
+```
