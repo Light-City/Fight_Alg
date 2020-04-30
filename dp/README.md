@@ -1999,3 +1999,98 @@ public:
     }
 };
 ```
+
+## 字符串匹配系列
+
+## 17.[72. 编辑距离](https://leetcode-cn.com/problems/edit-distance/)(重点！！！)
+
+> 递归+记忆化搜索1
+
+```cpp
+class Solution
+{
+private:
+    vector<vector<int> > memo;
+public:
+    int minDistance(string word1, string word2)
+    {
+        memo = vector<vector<int> >(word1.size(),vector<int>(word2.size(),-1));
+        // return dfs(word1, word2, 0,0);
+        return dfs1(word1, word2, word1.size(),word2.size());
+
+    }
+
+    // 每次三种选择{删除、插入、修改}
+    int dfs(string word1, string word2, int index1, int index2)
+    {
+
+        if(index1>=word1.size()) return word2.size()-index2;
+        if(index2>=word2.size()) return word1.size()-index1;
+
+        if(memo[index1][index2]!=-1) return memo[index1][index2];
+
+        int ans = INT_MAX; 
+        if(word1[index1] == word2[index2]) {
+            ans = min(ans,dfs(word1,word2,index1+1,index2+1));
+        } else {
+            ans = min(ans,1+dfs(word1,word2,index1+1,index2+1));
+            ans = min(ans,1+dfs(word1,word2,index1+1,index2));
+            ans = min(ans,1+dfs(word1,word2,index1,index2+1));
+        } 
+        memo[index1][index2] = ans;
+        return ans;
+    }
+```
+> 递归+记忆化搜索2
+```cpp
+    int dfs1(string word1, string word2, int index1, int index2)
+    {
+
+        if(index1==-1) return index2+1;
+        if(index2==-1) return index1+1;
+
+        if(memo[index1][index2]!=-1) return memo[index1][index2];
+
+        int ans = INT_MAX; 
+        if(word1[index1] == word2[index2]) {
+            ans = min(ans,dfs1(word1,word2,index1-1,index2-1));
+        } else {
+            ans = min(ans,1+dfs1(word1,word2,index1-1,index2-1));
+            ans = min(ans,1+dfs1(word1,word2,index1-1,index2));
+            ans = min(ans,1+dfs1(word1,word2,index1,index2-1));
+        } 
+        memo[index1][index2] = ans;
+        return ans;
+    }
+```    
+> 动态规划
+
+```
+    int minDistance1(string word1, string word2)
+    {
+        int n1=word1.size(),n2=word2.size();
+        vector<vector<int>> dp(n1+1,vector<int>(n2+1,0));
+
+        for(int i=0;i<=n1;i++) {
+            dp[i][0] = i;
+        }
+
+        for(int i=0;i<=n2;i++) {
+            dp[0][i] = i;
+        }
+
+        for(int i=1;i<=n1;i++) {
+            for(int j=1;j<=n2;j++) {
+                if(word1[i-1]==word2[j-1]) {
+                    dp[i][j] = dp[i-1][j-1];
+                }  else {
+                    // 替换、插入、删除
+                    dp[i][j] = min(1+dp[i-1][j-1],min(1+dp[i][j-1],1+dp[i-1][j]));
+                }
+            }
+        }
+        return dp[n1][n2];
+    }
+
+};
+```
