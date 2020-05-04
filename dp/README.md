@@ -2094,3 +2094,116 @@ public:
 
 };
 ```
+## 18.
+
+> 递归+记忆化搜索
+
+本题的一个启示：
+AC过程中一个测试用例，
+```
+"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+"*aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa*"
+```
+代码中如果写的是：
+```cpp
+memo[s_index][p_index] = dfs(s,p,s_index-1,p_index) ||  dfs(s,p,s_index,p_index-1);
+```
+就会超时，正确做法是，当碰到`*`，先移动模式串，再移动原串，改为：
+```cpp
+memo[s_index][p_index] = dfs(s,p,s_index,p_index-1) || dfs(s,p,s_index-1,p_index);
+```
+另外，`*`若多次重复，也会超时，我们要先删除重复的`*`。
+
+完整实现：
+```cpp
+class Solution {
+private:
+    vector<vector<int>> memo;
+public:
+    bool isMatch(string s, string p) {
+        memo = vector<vector<int>>(s.size(),vector<int>(p.size(),-1));
+        string tmp="";
+        for(int i =0;i<p.size();i++) {
+            if(tmp.size()==0) {
+                tmp.push_back(p[i]);
+                continue;
+            }
+            if(p[i]!='*' || tmp[tmp.size()-1]!=p[i]) tmp.push_back(p[i]);
+        }
+
+        return dfs(s,tmp,s.size()-1,tmp.size()-1);
+    }
+
+    bool dfs(string s, string p, int s_index, int p_index) {
+        // s空 p不空
+        if(s_index == -1) {
+            // s与p都空 
+            if(p_index == -1) return true;
+            // s空 p不为* 匹配失败
+            if(p[p_index] != '*') return false;
+            else
+                return dfs(s,p,s_index,p_index-1);
+        }
+        // s不空 p空
+        if(s_index !=-1 && p_index==-1) return false;
+
+        if(memo[s_index][p_index]!=-1) return memo[s_index][p_index];
+
+        // 当前字符
+        if(s[s_index] == p[p_index] || p[p_index] == '?') {
+            memo[s_index][p_index] = dfs(s,p,s_index-1,p_index-1);
+        } else {
+            if(p[p_index] == '*') {
+                memo[s_index][p_index] = dfs(s,p,s_index,p_index-1) || dfs(s,p,s_index-1,p_index);
+            } else 
+                memo[s_index][p_index] = false;
+        }
+        return memo[s_index][p_index];
+    }
+};
+```
+> 动态规化
+
+```cpp
+class Solution {
+private:
+
+public:
+    bool isMatch(string s, string p) {
+        
+        int s_len = s.size();
+        int p_len = p.size();
+
+        if(s_len == 0 && p_len == 0) return true;
+
+        if(p_len == 0) return false;
+
+        vector<vector<bool>> dp(s_len+1,vector<bool>(p_len+1,false));
+        dp[0][0] = true;
+        
+        // 头部所有* 都为true 例如:ho **ho 
+        for(int i=1;i<=p_len;i++) {
+            if(p[i-1] == '*')
+                dp[0][i] = true;
+            else
+                break;
+        }
+        
+        // dp定义的时候，就已经初始化dp[0][i] = false;
+
+        for(int i=1;i<=s_len;i++) {
+            for(int j=1;j<=p_len;j++) {
+                if(s[i-1] == p[j-1]  || p[j-1] == '?')
+                    dp[i][j] = dp[i-1][j-1];
+                else if(p[j-1] == '*') 
+                    dp[i][j] = dp[i-1][j] || dp[i][j-1];
+                else 
+                    dp[i][j] = false;
+            }
+        }
+        
+        return dp[s_len][p_len];
+    }
+
+};
+```
