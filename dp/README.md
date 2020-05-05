@@ -2207,3 +2207,117 @@ public:
 
 };
 ```
+## 19.[10. 正则表达式匹配](https://leetcode-cn.com/problems/regular-expression-matching/)
+
+
+本题必须知道的点：
+1) 匹配0次
+```
+a = "b"
+b = "bb*"
+```
+b匹配0次，连同前面字符一起删掉即可
+
+2) 匹配多次
+
+匹配1次
+```
+a="bbc" 
+b = "bb*c"
+```
+直接忽略*
+```
+a="bbbc" 
+b = "bb*c"
+```
+这里是匹配了2次
+
+最后就是失败的情况，例如：
+```
+a = "b"
+b = "bbb*"
+```
+这种情况就是不匹配！
+```
+a = "b"
+b = "*"
+```
+不匹配!
+
+> 递归+记忆化搜索
+
+```cpp
+// 优化后的版本 20ms
+class Solution {
+private:
+    vector<vector<int>> memo;
+public:
+    bool isMatch(string s, string p) {
+        memo = vector<vector<int>>(s.size()+1,vector<int>(p.size()+1,-1));
+        return dfs(s,p,0,0);
+    }
+
+    bool dfs(const string& s,const string& p,int s_index,int p_index) {
+        if(p_index==p.size()) return s_index==s.size();
+        
+        if(memo[s_index][p_index] != -1) return memo[s_index][p_index];
+        bool curMatch = s_index<s.size() && (s[s_index]==p[p_index] || p[p_index]=='.') ;
+        
+        if(p_index+1<p.size() && p[p_index+1]=='*') {
+            // 匹配0次、*继续匹配前面字符多次
+            memo[s_index][p_index] = dfs(s,p,s_index,p_index+2) || (curMatch && dfs(s,p,s_index+1,p_index));
+        } else {
+            memo[s_index][p_index] = curMatch && dfs(s,p,s_index+1,p_index+1);
+        }
+        return memo[s_index][p_index];
+    }
+       
+    
+};
+```
+
+> 动态规划
+
+```cpp
+class Solution {
+public:
+	bool isMatch(string s, string p) {
+        int sz=s.size();
+		int pz=p.size();
+
+		vector<vector<bool>> dp(sz+1,vector<bool>(pz+1,false));
+		dp[0][0]=true;
+		if(pz>=2 && p[1]=='*'){
+			dp[0][2]=true;
+		}
+		for(int i=2;i<pz;i++){
+			if(p[i]=='*'){
+				dp[0][i+1]=dp[0][i-1];
+			}
+		}
+
+		for(int i=1;i<=sz;i++){
+			for(int j=1;j<=pz;j++){
+                bool curMatch = p[j-1]==s[i-1] ||p[j-1]=='.';
+                
+				if(p[j-1]=='*'){
+					if(p[j-2]==s[i-1] || p[j-2]=='.'){
+                        dp[i][j] = dp[i-1][j]  || dp[i][j-2];
+                        // 两种情况
+                        /**
+                        *   dp[i-1][j] *重复前面字符多次
+                        *   dp[i][j-2] *跟前面字符一起忽略 匹配0次
+                        */
+                    }
+					else if(p[j-2]!=s[i-1]){
+						dp[i][j]=dp[i][j-2];
+					}
+				} else {
+                    dp[i][j]= curMatch && dp[i-1][j-1];
+                }
+			}
+		}
+		return dp[sz][pz];
+	}
+};
+```
