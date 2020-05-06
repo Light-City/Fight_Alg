@@ -2379,3 +2379,92 @@ public:
     }
 };
 ```
+## 20. 
+
+> 最长公共子序列解法
+
+将原串进行reverse,然后求解LCS问题(两个字符串的最长公共子序列)
+
+```cpp
+class Solution
+{
+public:
+    // LPS is equivalent to LCS of String s and reverse(s.begin(),s.end())
+    int longestCommonSubsequence(string text1, string text2) {
+        vector<vector<int>> dp(text1.size() + 1,vector<int>(text2.size() + 1,0));
+
+        // dp[0][j] 全部都等于0
+        // dp[i][0] 全部都等于0
+
+        for(int i=1; i<=text1.size();i++) {
+            for(int j=1; j<=text2.size();j++) {
+                if(text1[i-1] == text2[j-1]) {
+                    dp[i][j] = 1 + dp[i-1][j-1];
+                } else {
+                    dp[i][j] = max(dp[i-1][j],dp[i][j-1]);
+                }
+            }
+        }
+        return dp[text1.size()][text2.size()];
+    }
+    int longestPalindromeSubseq(string s)
+    {
+        string ss = s;
+        reverse(ss.begin(),ss.end());
+        return longestCommonSubsequence(s,ss);
+    }
+};
+```
+
+> 记忆化搜索
+
+两边一起搜索
+
+```cpp
+int longestPalindromeSubseq(string s)
+{
+	memo = vector<vector<int>>(s.size(), vector<int>(s.size(), -1));
+	return dfs(s, 0, s.size() - 1);
+}
+
+int dfs(const string &s, int l, int r)
+{
+	if (l > r)
+	    return 0;
+
+	if (l == r)
+	    return 1;
+
+	if (memo[l][r] != -1)
+	    return memo[l][r];
+
+	if (s[l] == s[r])
+	    memo[l][r] = 2 + dfs(s, l + 1, r - 1);
+	else
+	    memo[l][r] = max(dfs(s, l + 1, r), dfs(s, l, r - 1));
+	return memo[l][r];
+}
+```
+
+> 动态规划
+
+```cpp
+int longestPalindromeSubseq(string s)
+{
+
+	int n = s.size();
+	vector<vector<int>> dp(n,vector<int>(n));
+	for(int i=n-1;i>=0;i--) {
+	    dp[i][i] = 1;
+	    for(int j=i+1;j<n;j++) {
+		if(s[i] == s[j]) {
+		    dp[i][j] = 2+dp[i+1][j-1];
+		} else {
+		    dp[i][j] = max(dp[i+1][j],dp[i][j-1]);
+		}
+	    }
+	}
+	return dp[0][n-1];
+}
+```
+
