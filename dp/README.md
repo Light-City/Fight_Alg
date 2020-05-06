@@ -2321,3 +2321,44 @@ public:
 	}
 };
 ```
+> 上述对应的递归
+
+```cpp
+class Solution {
+public:
+	bool isMatch(string s, string p) {
+        return dfs(s,p,s.size(),p.size());
+	}
+
+
+    bool dfs(const string& s,const string& p,int s_index,int p_index) {
+        if(p_index == 0) return s_index == 0;
+        
+        
+        if(s_index==0) { 
+            if(p_index==2 && p[p_index-1] == '*')
+                return true;
+            else if(p_index>2 && p[p_index-1]=='*'){
+                return dfs(s,p,s_index,p_index-2);
+            }
+        } 
+
+        bool cur_match = s_index>0 && p[p_index-1]==s[s_index-1] ||p[p_index-1]=='.';
+        if( s_index>0 && p[p_index-1]=='*'){
+            if(p[p_index-2]==s[s_index-1] || p[p_index-2]=='.'){
+                return dfs(s,p,s_index-1,p_index) || dfs(s,p,s_index,p_index-2);
+               
+                // 两种情况
+                /**
+                *   dp[i-1][j] *重复前面字符多次
+                *   dp[i][j-2] *跟前面字符一起忽略 匹配0次
+                */
+            }
+            else if(p[p_index-2]!=s[s_index-1]){
+                return dfs(s,p,s_index,p_index-2);
+            }
+        } 
+        return cur_match && dfs(s,p,s_index-1,p_index-1);
+    }
+};
+```
