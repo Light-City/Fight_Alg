@@ -2279,47 +2279,63 @@ public:
 > 动态规划
 
 ```cpp
-class Solution {
+class Solution
+{
 public:
-	bool isMatch(string s, string p) {
-        int sz=s.size();
-		int pz=p.size();
+    bool isMatch(string s, string p)
+    {
+        int sz = s.size();
+        int pz = p.size();
 
-		vector<vector<bool>> dp(sz+1,vector<bool>(pz+1,false));
-		dp[0][0]=true;
-		if(pz>=2 && p[1]=='*'){
-			dp[0][2]=true;
-		}
-		for(int i=2;i<pz;i++){
-			// 当前位置的index是i-1,这里表示下一个位置是*就，*位置的结果就是前一个，表示*匹配了0次。
-			if(p[i]=='*'){
-				dp[0][i+1]=dp[0][i-1];
-			}
-		}
+        vector<vector<bool>> dp(sz + 1, vector<bool>(pz + 1, false));
+        dp[0][0] = true;
+        for (int i = 3; i <= pz; i++)
+        {
+            // 2
+            if (p[i-1] == '*')
+            {
+                dp[0][i] = dp[0][i - 2];
+            }
+        }
+        // 上面等价于这里
+        // for (int i = 2; i < pz; i++)
+        // {
+        //    // 2 
+        //     if (p[i] == '*')
+        //     {
+        //         // 0 3 0 1
+        //         dp[0][i + 1] = dp[0][i - 1];
+        //     }
+        // }
 
-		for(int i=1;i<=sz;i++){
-			for(int j=1;j<=pz;j++){
-                bool curMatch = p[j-1]==s[i-1] ||p[j-1]=='.';
-                
-				if(p[j-1]=='*'){
-					if(p[j-2]==s[i-1] || p[j-2]=='.'){
-                        dp[i][j] = dp[i-1][j]  || dp[i][j-2];
+        for (int i = 1; i <= sz; i++)
+        {
+            for (int j = 1; j <= pz; j++)
+            {
+                bool curMatch = p[j - 1] == s[i - 1] || p[j - 1] == '.';
+
+                if (p[j - 1] == '*')
+                {
+                    if (p[j - 2] == s[i - 1] || p[j - 2] == '.')
+                    {
+                        dp[i][j] = dp[i - 1][j] || dp[i][j - 2];
                         // 两种情况
-                        /**
-                        *   dp[i-1][j] *重复前面字符多次
-                        *   dp[i][j-2] *跟前面字符一起忽略 匹配0次
-                        */
+                        // dp[i-1][j] *重复前面字符多次
+                        // dp[i][j-2] *跟前面字符一起忽略 匹配0次
                     }
-					else if(p[j-2]!=s[i-1]){
-						dp[i][j]=dp[i][j-2];
-					}
-				} else {
-                    dp[i][j]= curMatch && dp[i-1][j-1];
+                    else if (p[j - 2] != s[i - 1])
+                    {
+                        dp[i][j] = dp[i][j - 2];
+                    }
                 }
-			}
-		}
-		return dp[sz][pz];
-	}
+                else
+                {
+                    dp[i][j] = curMatch && dp[i - 1][j - 1];
+                }
+            }
+        }
+        return dp[sz][pz];
+    }
 };
 ```
 > 上述对应的递归
