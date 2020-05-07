@@ -2467,4 +2467,60 @@ int longestPalindromeSubseq(string s)
 	return dp[0][n-1];
 }
 ```
+## 21.[730. 统计不同回文子字符串](https://leetcode-cn.com/problems/count-different-palindromic-subsequences/)
 
+取模与取余，对负数取模：
+```
+-3+7/7
+```
+语言环境不同，“%”所代表的意义也不一样。在C++和Java中，“%”代表的是“取余”，而在Python中，“%”代表的是“取模”。注意，“取余”和“取模”并不一样，因此不能像答主那样在不同的环境下测试对负数取模后的答案。实质上只是你在C++和Java中进行了“取余”运算，而在Python和计算器中进行了“取模”运算。对正数进行取余和取模两种运算，其结果是相同的。而对于负数，取余和取模的结果则是不相同的。
+
+> 动态规划实现：
+```cpp
+class Solution {
+public:
+    int countPalindromicSubsequences(string S) {
+        int n = S.size();
+        int mod = 1e9+7;
+        vector<vector<int>> dp(n,vector<int>(n));
+
+        // 我们以dp[i][j]表示S[i,j]这段字符串中不同的回文子序列个数
+
+        for(int i=n-1;i>=0;i--) {
+            dp[i][i] = 1;
+            for(int j=i+1;j<n;j++) {
+                if(S[i]==S[j])  {
+                    int left = i+1,right = j-1;
+                    while(left<=right && S[left]!=S[i]) {
+                        ++left;
+                    }
+                    while(left<=right && S[right]!=S[i]) {
+                        --right;
+                    }
+                    // 针对重复情况
+                    // aba
+                    // aaa
+                    // aabaa
+                    // 1) aba  中间没有跟起点重复的
+                    if(left > right) {
+                        // 乘以2表示：中间子序列单独存在与中间子序列同两边端点组成的子序列这两种情况
+                        // 加上2是表示端点处的2种可能：a,aa
+                        dp[i][j] = dp[i+1][j-1]*2 + 2;
+                    } else if(left == right) { // aaa
+                        // 乘以2同上，加1表示加上aa这一种情况
+                        dp[i][j] = dp[i+1][j-1]*2 + 1;
+                    } else { // aabaa
+                        // 中间部分被重复计算了，减去重复的
+                        dp[i][j] = dp[i+1][j-1]*2 -dp[left+1][right-1];
+                    }
+                } else {
+                    // 减去重复计算的
+                    dp[i][j] = dp[i][j-1]+dp[i+1][j]-dp[i+1][j-1];
+                }
+                dp[i][j] = (dp[i][j]<0) ? dp[i][j]+mod:dp[i][j]%mod;
+            }
+        }
+        return dp[0][n-1];
+    }
+};
+```
