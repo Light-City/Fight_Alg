@@ -2524,3 +2524,68 @@ public:
     }
 };
 ```
+## 22.[1039. 多边形三角剖分的最低得分](https://leetcode-cn.com/problems/minimum-score-triangulation-of-polygon/)
+
+> 记忆化搜索
+
+dp[i][j]表示，将[i,j]的点组成的多边形的最小和。
+
+k是(i,j)中的点。
+
+这个多边形可以分成三个部分，多边形[i,k],多边形[k,j],三角形(i,j,k);
+
+假设多边形[i,k],多边形[k,j]已知，遍历这个k，可以到这最小值。
+
+然后可以将问题转化为子问题，求解多边形[i,k],多边形[k,j]的最小值。
+
+```cpp
+class Solution
+{
+private:
+    vector<vector<int>> dp;
+
+public:
+    int minScoreTriangulation(vector<int> &A)
+    {
+        dp = vector<vector<int>>(A.size(), vector<int>(A.size(),-1));
+        return dfs(A, 0, A.size() - 1);
+    }
+
+       int dfs(const vector<int> &A, int left, int right)
+    {
+        if (left + 1 >= right)
+            return 0;
+        if(dp[left][right] != -1) return dp[left][right];
+        int ret = INT_MAX;
+        for (int k = left+1; k < right; k++)
+            ret = min(ret, dfs(A, left, k) + dfs(A, k, right) + A[left] * A[k] * A[right]);
+        dp[left][right] = ret; 
+        return dp[left][right];
+    }
+};
+```
+> 动态规划
+
+```cpp
+class Solution
+{
+public:
+    int minScoreTriangulation(vector<int> &A)
+    {
+        int n = A.size();
+        vector<vector<int>> dp(n, vector<int>(n, 0));
+        // gap <=1 0
+        for (int gap = 2; gap < n; gap++)
+        {
+            for (int i = 0, j = i + gap; i < n, j < n; i++, j++)
+            {
+                dp[i][j]  = 1 << 30;
+                for (int k = i + 1; k < j; k++)
+                    dp[i][j] =  min(dp[i][j] , A[i] * A[k] * A[j] + dp[i][k] + dp[k][j]);
+            }
+        }
+        return dp[0][n - 1];
+    }
+};
+```
+
