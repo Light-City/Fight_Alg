@@ -2588,4 +2588,85 @@ public:
     }
 };
 ```
+## 23.[664. 奇怪的打印机](https://leetcode-cn.com/problems/strange-printer/)
+
+> 动态规划法
+
+当我们打印一个新字符的时，如果该字符和已打印的字符末尾相同，那么就等于之前的结构，否则我们需要向前寻找与当前字符相同的字符。
+
+再向前寻找和当前字符相同的字符中，例如：ab 后面打印一个a，b与a不相等，我们发现第一个字符等于当前新加的字符，此时打印方式就是aaa然后替换中间的a，结构就是aba。
+```cpp
+class Solution {
+public:
+    int strangePrinter(string s) {
+
+        int n = s.size();
+        if(n<=1) return n;
+        vector<vector<int>> dp(n+1,vector<int>(n+1,0));
+
+        for(int i=0;i<n;i++) {
+            dp[i][i] = 1;
+        }
+
+        for(int len=2;len<=n;len++) {
+            for(int i=0;i<n && i+len-1<n;i++) {
+                int j = i+len-1;
+                // 当我们打印了一个新字符时,首先如果该字符和已打印字符的末尾相同,那么所需步骤和打印先前字符的步骤相同(很好理解,我们只需要在末尾连续打印就行了)
+                if(s[j]==s[j-1]) {
+                    dp[i][j] = dp[i][j-1];
+                } else {  
+                // 该字符与已打印字符的末尾不同，向前寻找与当前字符相同的字符。
+                // aabac尾部新还需要打印一个a,可以aabaaa,然后替换为aabaca.
+                // 也可以aaaaaa，替换成aabaca。
+                    dp[i][j] = dp[i][j-1] + 1;
+
+                    for(int k=j-1;k>=i;k--) {
+                        if(s[k]==s[j])
+                            // ab 尾部再继续打印a，发现跟b不相等，往前看有没有相等的，划分两个区间[i,k]与[k+1,j-1]。
+                            dp[i][j] = min(dp[i][j],dp[i][k]+dp[k+1][j-1]);
+                    }
+                }
+            }
+        }
+        return dp[0][n-1];
+    }  
+};
+```
+> 记忆化搜索
+
+```cpp
+class Solution {
+private:
+    vector<vector<int>> memo;
+public:
+    int dfs(const string& s, int i, int j) {
+        if (j < 0) return 0;
+        if (memo[i][j] != 0) {
+            return memo[i][j];
+        }
+        int res;
+        if(s[j-1] == s[j]) res = dfs(s,i,j-1);
+        else {
+            res= dfs(s, i, j-1) + 1;
+            for (int k = j-1; k >= i; k--) {
+                if (s[k] == s[j]) {
+                    res = min(res, dfs(s, i, k) + dfs(s, k+1, j-1));
+                }
+            }
+        }
+        memo[i][j] = res;
+        return res;
+        
+    }
+    int strangePrinter(string s) {
+        if (s.empty()) return 0;
+        int n = s.size();
+        memo = vector<vector<int>>(n+1, vector<int>(n+1, 0));
+        for (int i = 0; i < n; ++i) {
+            memo[i][i] = 1;
+        }
+        return dfs(s, 0, n - 1);
+    }
+};
+```
 
